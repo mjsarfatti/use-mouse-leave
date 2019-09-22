@@ -1,0 +1,63 @@
+{
+  "name": "use-mouse-leave",
+  "version": "1.0.0",
+  "description": "React hook to reliably run an effect on `mouseleave`",
+  "main": "dist/index.js",
+  "unpkg": "dist/index.min.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc && terser --compress --mangle -- dist/index.js > dist/index.min.js",
+    "prepare": "tsc --noEmit && lint-staged && npm run build",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mjsarfatti/use-mouse-leave.git"
+  },
+  "keywords": [
+    "react",
+    "hooks",
+    "mouseleave",
+    "onmouseleave"
+  ],
+  "author": "Manuele J Sarfatti <mjsarfatti@gmail.com> (mjsarfatti.com)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mjsarfatti/use-mouse-leave/issues"
+  },
+  "homepage": "https://github.com/mjsarfatti/use-mouse-leave#readme",
+  "devDependencies": {
+    "@types/react": "^16.9.2",
+    "@types/react-dom": "^16.9.0",
+    "@typescript-eslint/eslint-plugin": "^2.3.0",
+    "@typescript-eslint/parser": "^2.3.0",
+    "eslint": "^6.4.0",
+    "eslint-config-prettier": "^6.3.0",
+    "eslint-plugin-prettier": "^3.1.1",
+    "eslint-plugin-react": "^7.14.3",
+    "husky": "^3.0.5",
+    "lint-staged": "^9.3.0",
+    "prettier": "^1.18.2",
+    "terser": "^4.3.1",
+    "typescript": "^3.6.3"
+  },
+  "dependencies": {
+    "@types/throttle-debounce": "^2.1.0",
+    "react": "^16.9.0",
+    "react-dom": "^16.9.0",
+    "throttle-debounce": "^2.1.0",
+    "tslib": "^1.10.0"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "tsc --noEmit && lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.{js,ts,tsx,jsx}": [
+      "prettier --write",
+      "eslint --fix",
+      "git add"
+    ]
+  }
+}
