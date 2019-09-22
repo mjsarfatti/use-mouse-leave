@@ -56,7 +56,7 @@ return (
 
 ### Demo
 
-[TODO publish codesandbox]
+[![Edit determined-goldwasser-35ukt](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/determined-goldwasser-35ukt?fontsize=14&module=%2Fsrc%2FApp.tsx)
 
 ## How it works
 
@@ -65,6 +65,8 @@ The hook attaches a `mouseenter` listener (which is reliable) to our element. Th
 _Please note_
 
 The hook uses `getClientBoundingRect()` to determine the boundaries of the element. This means that if the element has children positioned _relatively_, _absolutely_ or _fixedly_ they will not be taken into account (as they do not influence the element's box). Same goes with children with applied transforms.
+
+On the other hand, the browser takes those children into account. Play around with the demo to see when we fire `mouseleave` and when the browser does.
 
 ## Tests
 
