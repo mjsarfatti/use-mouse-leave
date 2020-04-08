@@ -59,5 +59,5 @@ export default function useMouseLeave() {
     };
   }, []);
 
-  return [mouseLeft, setRef] as const;
+  return [mouseLeft, setRef, elementRef] as const;
 }
