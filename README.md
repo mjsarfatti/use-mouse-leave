@@ -54,6 +54,54 @@ return (
 );
 ```
 
+### Accessing the inner ref
+
+For some reasons, you might want to access the inner ref.
+
+For example, let's imagine you have a calendar and want to show a popup with more informations when hovering an event.
+
+```
+<EventPopupWrapper target={the event being hovered}>
+  <Calendar>
+    ...dozens of nested components
+         <Event />
+  </Calendar>
+</PopupWrapper>
+```
+
+You would need to be able to get the event's dom node, to attach the Popup to it.
+
+`useMouseLeave` exposes its internal ref for you to play with as the third parameter of the returned tuple.
+
+```js
+[...]
+
+const [
+  mouseLeft,
+  setRef, // the callback ref to put on the div
+  innerRef, // the internal ref that directly points on the dom node
+] = useMouseLeave();
+
+useEffect(() => {
+  if (mouseLeft) { ... }
+}, [mouseLeft]);
+
+[...]
+
+return (
+  <div
+    ref={setRef}
+    onMouseEnter={() => {
+      // innerRef.current => <div ....>
+      // you can now use innerRef.current to anchor the popup to this div
+    }}
+  >
+    ...
+  </div>
+);
+```
+> 
+
 ### Demo
 
 [![Edit determined-goldwasser-35ukt](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/determined-goldwasser-35ukt?fontsize=14&module=%2Fsrc%2FApp.tsx)
