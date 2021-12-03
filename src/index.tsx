@@ -22,6 +22,7 @@ export default function useMouseLeave() {
 
   // Start tracking the pointer when it enters our element
   const handleMouseEnter = useRef(() => {
+    setMouseLeft(false);
     window.addEventListener('mousemove', handleMouseMove);
   }).current;
 
