@@ -5,3 +5,4 @@ eslint.config.js
 node_modules
 src
 demo
+test
