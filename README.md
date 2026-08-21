@@ -104,11 +104,14 @@ return (
   </div>
 );
 ```
-> 
+
+>
 
 ### Demo
 
 [![Edit determined-goldwasser-35ukt](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/determined-goldwasser-35ukt?fontsize=14&module=%2Fsrc%2FApp.tsx)
+
+There's also a local demo in this repo's [`demo`](./demo) folder, useful for testing changes to the hook itself. Clone the repo, `npm install`, then `npm run demo`.
 
 ## How it works
 
@@ -116,9 +119,7 @@ The hook attaches a `mouseenter` listener (which is reliable) to our element. Th
 
 _Please note_
 
-The hook uses `getClientBoundingRect()` to determine the boundaries of the element. This means that if the element has children positioned _relatively_, _absolutely_ or _fixedly_ they will not be taken into account (as they do not influence the element's box). Same goes with children with applied transforms.
-
-On the other hand, the browser takes those children into account. Play around with the demo to see when we fire `mouseleave` and when the browser does.
+The hook treats the pointer as "inside" whenever it's over a DOM descendant of the tracked element, even one positioned _relatively_, _absolutely_ or _fixedly_ (or transformed) outside the element's own box -- matching how the browser's native `mouseenter`/`mouseleave` see it. Only when the pointer lands on something outside that subtree does it fall back to checking the coordinates against `getBoundingClientRect()`, which is how it also catches the pointer leaving through a gap the box doesn't cover (e.g. a `margin`).
 
 ## Tests
 

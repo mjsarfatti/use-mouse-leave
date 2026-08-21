@@ -7,6 +7,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc && terser --compress --mangle -- dist/index.js > dist/index.min.js",
+    "demo": "vite demo",
     "prepare": "husky",
     "prepack": "tsc --noEmit && npm run build",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -33,6 +34,7 @@
     "@types/throttle-debounce": "^5.0.2",
     "@typescript-eslint/eslint-plugin": "^8.67.0",
     "@typescript-eslint/parser": "^8.67.0",
+    "@vitejs/plugin-react": "^6.1.0",
     "eslint": "^10.8.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.6",
@@ -44,7 +46,8 @@
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "terser": "^5.50.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vite": "^8.2.2"
   },
   "dependencies": {
     "throttle-debounce": "^5.0.2"
