@@ -1,6 +1,6 @@
 {
   "name": "use-mouse-leave",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "React hook to reliably run an effect on `mouseleave`",
   "main": "dist/index.js",
   "unpkg": "dist/index.min.js",
@@ -30,12 +30,14 @@
   "devDependencies": {
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
+    "@types/throttle-debounce": "^5.0.2",
     "@typescript-eslint/eslint-plugin": "^8.67.0",
     "@typescript-eslint/parser": "^8.67.0",
     "eslint": "^10.8.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.6",
     "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "husky": "^9.1.7",
     "lint-staged": "^17.3.0",
     "prettier": "^3.9.6",
@@ -45,7 +47,6 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "@types/throttle-debounce": "^5.0.2",
     "throttle-debounce": "^5.0.2"
   },
   "peerDependencies": {
