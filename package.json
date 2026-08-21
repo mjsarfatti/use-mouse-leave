@@ -1,6 +1,6 @@
 {
   "name": "use-mouse-leave",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "React hook to reliably run an effect on `mouseleave`",
   "main": "dist/index.js",
   "unpkg": "dist/index.min.js",
