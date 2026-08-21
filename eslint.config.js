@@ -1,6 +1,7 @@
 const tsPlugin = require('@typescript-eslint/eslint-plugin');
 const tsParser = require('@typescript-eslint/parser');
 const react = require('eslint-plugin-react');
+const reactHooks = require('eslint-plugin-react-hooks');
 const prettierRecommended = require('eslint-plugin-prettier/recommended');
 
 module.exports = [
@@ -8,6 +9,7 @@ module.exports = [
     ignores: ['dist/**', 'eslint.config.js', '.prettierrc.js'],
   },
   ...tsPlugin.configs['flat/recommended'],
+  reactHooks.configs.flat['recommended-latest'],
   {
     ...react.configs.flat.recommended,
     settings: {
