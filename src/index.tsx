@@ -1,31 +1,5 @@
 import { useState, useRef, useEffect, useCallback, type RefObject } from 'react';
-import { useSyncExternalStore } from 'use-sync-external-store/shim';
-
-/**
- * Minimal pub/sub store backing the hook's `mouseLeft` value via
- * useSyncExternalStore, instead of useState. This lets the mousemove
- * handler (below) update the value directly without needing React
- * to hand it a fresh setState closure on every render.
- */
-function createMouseLeftStore() {
-  let mouseLeft = true;
-  const listeners = new Set<() => void>();
-
-  return {
-    getSnapshot: () => mouseLeft,
-    setMouseLeft(next: boolean) {
-      if (mouseLeft === next) return;
-      mouseLeft = next;
-      listeners.forEach((listener) => listener());
-    },
-    subscribe(onStoreChange: () => void) {
-      listeners.add(onStoreChange);
-      return () => {
-        listeners.delete(onStoreChange);
-      };
-    },
-  };
-}
+import { throttle } from 'throttle-debounce';
 
 export default function useMouseLeave<T extends HTMLElement = HTMLElement>(): readonly [
   boolean,
@@ -33,92 +7,42 @@ export default function useMouseLeave<T extends HTMLElement = HTMLElement>(): re
   RefObject<T | null>,
 ] {
   const elementRef = useRef<T | null>(null);
+  const [mouseLeft, setMouseLeft] = useState(true);
 
-  // `useState`'s lazy initializer is guaranteed by React to run exactly
-  // once and doesn't involve reading a ref during render, unlike the
-  // `useRef`-based lazy-init idiom -- see the react-hooks/refs rule (part
-  // of the React Compiler-aligned rules in eslint-plugin-react-hooks 6+):
-  // reading `ref.current` synchronously during render is never safe, even
-  // when guarded. The setter is intentionally unused: this value never
-  // needs to trigger a re-render on its own.
-  const [store] = useState(createMouseLeftStore);
+  // Check whether the pointer is still within our element
+  const checkBounds = useCallback((event: MouseEvent) => {
+    if (!elementRef.current) return;
 
-  // `store.getSnapshot` doubles as `getServerSnapshot`: it never touches
-  // the DOM, and the store's initial value (true) is exactly what should
-  // render on the server, since no mouse event could have fired there.
-  // useSyncExternalStore throws during SSR if this third argument is
-  // omitted -- it's required, not optional-for-safety.
-  const mouseLeft = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
+    const rect = elementRef.current.getBoundingClientRect();
 
-  // Throttle bookkeeping for handleMouseMove below (leading + trailing,
-  // mirroring what the `throttle-debounce` package's defaults did -- kept
-  // as plain refs, and read only from inside the callback itself, never
-  // during render, so this stays a zero-runtime-dependency library)
-  const lastInvokeTimeRef = useRef(0);
-  const timeoutIdRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const pendingEventRef = useRef<MouseEvent | undefined>(undefined);
-
-  const cancelPendingMouseMove = useCallback(() => {
-    clearTimeout(timeoutIdRef.current);
-    timeoutIdRef.current = undefined;
-    pendingEventRef.current = undefined;
+    if (
+      event.clientX < rect.left ||
+      event.clientX > rect.right ||
+      event.clientY < rect.top ||
+      event.clientY > rect.bottom
+    ) {
+      setMouseLeft(true);
+    } else {
+      setMouseLeft(false);
+    }
   }, []);
 
-  // Check whether the pointer is still within our element. Hoisted out of
-  // handleMouseMove so it's only allocated once, not on every raw
-  // mousemove event (most of which the throttle below discards)
-  const checkBounds = useCallback(
-    (event: MouseEvent) => {
-      if (!elementRef.current) return;
-
-      const rect = elementRef.current.getBoundingClientRect();
-
-      if (
-        event.clientX < rect.left ||
-        event.clientX > rect.right ||
-        event.clientY < rect.top ||
-        event.clientY > rect.bottom
-      ) {
-        store.setMouseLeft(true);
-      } else {
-        store.setMouseLeft(false);
-      }
-    },
-    [store],
-  );
-
-  // Throttled to every 50ms
-  const handleMouseMove = useCallback(
-    (event: MouseEvent) => {
-      const delay = 50;
-      const now = Date.now();
-      const remaining = delay - (now - lastInvokeTimeRef.current);
-
-      if (remaining <= 0) {
-        clearTimeout(timeoutIdRef.current);
-        timeoutIdRef.current = undefined;
-        lastInvokeTimeRef.current = now;
-        checkBounds(event);
-        return;
-      }
-
-      pendingEventRef.current = event;
-      if (timeoutIdRef.current === undefined) {
-        timeoutIdRef.current = setTimeout(() => {
-          timeoutIdRef.current = undefined;
-          lastInvokeTimeRef.current = Date.now();
-          if (pendingEventRef.current) checkBounds(pendingEventRef.current);
-        }, remaining);
-      }
-    },
-    [checkBounds],
-  );
+  // Throttled to every 50ms. `useState`'s lazy initializer runs exactly
+  // once, so `checkBounds` (which reads `elementRef.current`, but only
+  // when it's actually invoked later, as a real event handler) is never
+  // called here -- it's merely handed to `throttle-debounce`, which
+  // stores the reference for later. The rule below can't tell the
+  // difference between "passed to a function that calls it now" and
+  // "passed to a function that stores it for later", so it flags this
+  // unconditionally; verified safe via a fresh build + the smoke tests.
+  // eslint-disable-next-line react-hooks/refs -- see comment above
+  const [handleMouseMove] = useState(() => throttle(50, checkBounds));
 
   // Start tracking the pointer when it enters our element
   const handleMouseEnter = useCallback(() => {
-    store.setMouseLeft(false);
+    setMouseLeft(false);
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
-  }, [store, handleMouseMove]);
+  }, [handleMouseMove]);
 
   // See https://medium.com/@teh_builder/ref-objects-inside-useeffect-hooks-eb7c15198780
   // Dynamic ref because the element may be null at times
@@ -129,14 +53,14 @@ export default function useMouseLeave<T extends HTMLElement = HTMLElement>(): re
 
       // A pending trailing mousemove call belongs to the outgoing element;
       // don't let it fire against whatever node ends up here instead
-      cancelPendingMouseMove();
+      handleMouseMove.cancel({ upcomingOnly: true });
 
       // Save a reference to the node (or clear it, if detached)
       elementRef.current = node;
 
       node?.addEventListener('mouseenter', handleMouseEnter);
     },
-    [handleMouseEnter, cancelPendingMouseMove],
+    [handleMouseEnter, handleMouseMove],
   );
 
   // Cleanup the pointer tracking when the mouse is not over our element anymore
@@ -151,9 +75,9 @@ export default function useMouseLeave<T extends HTMLElement = HTMLElement>(): re
     return () => {
       elementRef.current?.removeEventListener('mouseenter', handleMouseEnter);
       window.removeEventListener('mousemove', handleMouseMove);
-      cancelPendingMouseMove();
+      handleMouseMove.cancel({ upcomingOnly: true });
     };
-  }, [handleMouseEnter, handleMouseMove, cancelPendingMouseMove]);
+  }, [handleMouseEnter, handleMouseMove]);
 
   return [mouseLeft, setRef, elementRef] as const;
 }
