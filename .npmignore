@@ -1,5 +1,6 @@
 .*
 **/tsconfig.json
+eslint.config.js
 
 node_modules
 src

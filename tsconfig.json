@@ -2,15 +2,25 @@
   "compilerOptions": {
     "outDir": "./dist",
     "sourceMap": true,
-    "noImplicitAny": true,
     "declaration": true,
+    "declarationMap": true,
     "module": "commonjs",
     "target": "es5",
     "jsx": "react",
     "strict": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "lib": ["dom", "es2015"]
+    "lib": ["dom", "es2015"],
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "noEmitOnError": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
   },
   "include": ["./src"]
 }
