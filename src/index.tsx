@@ -43,7 +43,12 @@ export default function useMouseLeave<T extends HTMLElement = HTMLElement>(): re
   // needs to trigger a re-render on its own.
   const [store] = useState(createMouseLeftStore);
 
-  const mouseLeft = useSyncExternalStore(store.subscribe, store.getSnapshot);
+  // `store.getSnapshot` doubles as `getServerSnapshot`: it never touches
+  // the DOM, and the store's initial value (true) is exactly what should
+  // render on the server, since no mouse event could have fired there.
+  // useSyncExternalStore throws during SSR if this third argument is
+  // omitted -- it's required, not optional-for-safety.
+  const mouseLeft = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
 
   // Throttle bookkeeping for handleMouseMove below (leading + trailing,
   // mirroring what the `throttle-debounce` package's defaults did -- kept
@@ -53,21 +58,38 @@ export default function useMouseLeave<T extends HTMLElement = HTMLElement>(): re
   const timeoutIdRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const pendingEventRef = useRef<MouseEvent | undefined>(undefined);
 
-  // Check whether the pointer is still within our element, throttled to every 50ms
+  const cancelPendingMouseMove = useCallback(() => {
+    clearTimeout(timeoutIdRef.current);
+    timeoutIdRef.current = undefined;
+    pendingEventRef.current = undefined;
+  }, []);
+
+  // Check whether the pointer is still within our element. Hoisted out of
+  // handleMouseMove so it's only allocated once, not on every raw
+  // mousemove event (most of which the throttle below discards)
+  const checkBounds = useCallback(
+    (event: MouseEvent) => {
+      if (!elementRef.current) return;
+
+      const rect = elementRef.current.getBoundingClientRect();
+
+      if (
+        event.clientX < rect.left ||
+        event.clientX > rect.right ||
+        event.clientY < rect.top ||
+        event.clientY > rect.bottom
+      ) {
+        store.setMouseLeft(true);
+      } else {
+        store.setMouseLeft(false);
+      }
+    },
+    [store],
+  );
+
+  // Throttled to every 50ms
   const handleMouseMove = useCallback(
     (event: MouseEvent) => {
-      const checkBounds = (e: MouseEvent) => {
-        if (!elementRef.current) return;
-
-        const rect = elementRef.current.getBoundingClientRect();
-
-        if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) {
-          store.setMouseLeft(true);
-        } else {
-          store.setMouseLeft(false);
-        }
-      };
-
       const delay = 50;
       const now = Date.now();
       const remaining = delay - (now - lastInvokeTimeRef.current);
@@ -89,7 +111,7 @@ export default function useMouseLeave<T extends HTMLElement = HTMLElement>(): re
         }, remaining);
       }
     },
-    [store],
+    [checkBounds],
   );
 
   // Start tracking the pointer when it enters our element
@@ -105,12 +127,16 @@ export default function useMouseLeave<T extends HTMLElement = HTMLElement>(): re
       // Make sure to cleanup any events/references added to the last instance
       elementRef.current?.removeEventListener('mouseenter', handleMouseEnter);
 
+      // A pending trailing mousemove call belongs to the outgoing element;
+      // don't let it fire against whatever node ends up here instead
+      cancelPendingMouseMove();
+
       // Save a reference to the node (or clear it, if detached)
       elementRef.current = node;
 
       node?.addEventListener('mouseenter', handleMouseEnter);
     },
-    [handleMouseEnter],
+    [handleMouseEnter, cancelPendingMouseMove],
   );
 
   // Cleanup the pointer tracking when the mouse is not over our element anymore
@@ -125,8 +151,9 @@ export default function useMouseLeave<T extends HTMLElement = HTMLElement>(): re
     return () => {
       elementRef.current?.removeEventListener('mouseenter', handleMouseEnter);
       window.removeEventListener('mousemove', handleMouseMove);
+      cancelPendingMouseMove();
     };
-  }, [handleMouseEnter, handleMouseMove]);
+  }, [handleMouseEnter, handleMouseMove, cancelPendingMouseMove]);
 
   return [mouseLeft, setRef, elementRef] as const;
 }
