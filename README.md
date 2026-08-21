@@ -16,10 +16,14 @@ _useMouseLeave_ is the easiest way to fire effects reliably when the mouse leave
 
 ### Installation
 
-```
-npm install use-mouse-leave --save
-~ or ~
+```bash
+npm install use-mouse-leave
+# or
 yarn add use-mouse-leave
+# or
+pnpm add use-mouse-leave
+# or
+bun add use-mouse-leave
 ```
 
 ### Usage
