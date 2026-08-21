@@ -7,7 +7,8 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc && terser --compress --mangle -- dist/index.js > dist/index.min.js",
-    "prepare": "tsc --noEmit && lint-staged && npm run build",
+    "prepare": "husky",
+    "prepack": "tsc --noEmit && npm run build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -35,27 +36,21 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.6",
     "eslint-plugin-react": "^7.37.5",
-    "husky": "^3.0.5",
+    "husky": "^9.1.7",
     "lint-staged": "^17.3.0",
     "prettier": "^3.9.6",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "terser": "^4.3.1",
+    "terser": "^5.50.0",
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "@types/throttle-debounce": "^2.1.0",
-    "throttle-debounce": "^2.1.0",
-    "tslib": "^1.10.0"
+    "@types/throttle-debounce": "^5.0.2",
+    "throttle-debounce": "^5.0.2"
   },
   "peerDependencies": {
     "react": "^16.9.0 || ^17.0.0 || ^18.0.0 || ^19.0.0",
     "react-dom": "^16.9.0 || ^17.0.0 || ^18.0.0 || ^19.0.0"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "tsc --noEmit && lint-staged"
-    }
   },
   "lint-staged": {
     "*.{js,ts,tsx,jsx}": [
