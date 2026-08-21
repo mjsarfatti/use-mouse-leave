@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - A local `demo/` folder (Vite-based, dev-only) reproducing the parent/overflowing-child scenario from the CodeSandbox demo, with a live native `onMouseEnter`/`onMouseLeave` readout next to the hook's own `mouseLeft` for direct comparison. Run with `npm run demo`.
+- A first automated regression test (Node's built-in test runner + jsdom), covering the `checkBounds` fix above. Run with `npm test`.
 
 ## [1.0.1] - 2026-08-21
 

@@ -36,7 +36,7 @@ export default function useMouseLeave<T extends HTMLElement = HTMLElement>(): re
 
   // `useState`'s lazy initializer runs exactly once, so `checkBounds` here
   // is merely handed to `throttle-debounce` to store for later, never
-  // invoked now -- verified safe via a fresh build and the regression tests.
+  // invoked now -- confirmed via `npm run build` and `npm test`.
   //
   // eslint-disable-next-line react-hooks/refs -- see comment above
   const [handleMouseMove] = useState(() => throttle(50, checkBounds));
