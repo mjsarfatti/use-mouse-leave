@@ -38,6 +38,17 @@ export default function useMouseLeave<T extends HTMLElement = HTMLElement>(): re
   // eslint-disable-next-line react-hooks/refs -- see comment above
   const [handleMouseMove] = useState(() => throttle(50, checkBounds));
 
+  // Fully stops tracking the pointer: removes the live listener (so no
+  // further real mousemove can call checkBounds against a since-swapped
+  // element) and cancels any trailing throttle call still in flight (so a
+  // stale queued call can't fire afterwards either). Used everywhere
+  // tracking needs to stop -- mouseLeft flipping true, a ref swap, and
+  // unmount -- so those three sites can't drift out of sync again.
+  const stopTracking = useCallback(() => {
+    window.removeEventListener('mousemove', handleMouseMove);
+    handleMouseMove.cancel({ upcomingOnly: true });
+  }, [handleMouseMove]);
+
   // Start tracking the pointer when it enters our element
   const handleMouseEnter = useCallback(() => {
     setMouseLeft(false);
@@ -51,33 +62,32 @@ export default function useMouseLeave<T extends HTMLElement = HTMLElement>(): re
       // Make sure to cleanup any events/references added to the last instance
       elementRef.current?.removeEventListener('mouseenter', handleMouseEnter);
 
-      // A pending trailing mousemove call belongs to the outgoing element;
-      // don't let it fire against whatever node ends up here instead
-      handleMouseMove.cancel({ upcomingOnly: true });
+      // The outgoing element's hover session (if any) is over -- don't let
+      // its live listener or a queued trailing call touch the new node
+      stopTracking();
 
       // Save a reference to the node (or clear it, if detached)
       elementRef.current = node;
 
       node?.addEventListener('mouseenter', handleMouseEnter);
     },
-    [handleMouseEnter, handleMouseMove],
+    [handleMouseEnter, stopTracking],
   );
 
   // Cleanup the pointer tracking when the mouse is not over our element anymore
   useEffect(() => {
     if (mouseLeft) {
-      window.removeEventListener('mousemove', handleMouseMove);
+      stopTracking();
     }
-  }, [mouseLeft, handleMouseMove]);
+  }, [mouseLeft, stopTracking]);
 
   useEffect(() => {
     // Cleanup events on component unmount
     return () => {
       elementRef.current?.removeEventListener('mouseenter', handleMouseEnter);
-      window.removeEventListener('mousemove', handleMouseMove);
-      handleMouseMove.cancel({ upcomingOnly: true });
+      stopTracking();
     };
-  }, [handleMouseEnter, handleMouseMove]);
+  }, [handleMouseEnter, stopTracking]);
 
   return [mouseLeft, setRef, elementRef] as const;
 }
