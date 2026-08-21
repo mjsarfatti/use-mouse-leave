@@ -121,6 +121,8 @@ _Please note_
 
 The hook treats the pointer as "inside" whenever it's over a DOM descendant of the tracked element, even one positioned _relatively_, _absolutely_ or _fixedly_ (or transformed) outside the element's own box -- matching how the browser's native `mouseenter`/`mouseleave` see it. Only when the pointer lands on something outside that subtree does it fall back to checking the coordinates against `getBoundingClientRect()`, which is how it also catches the pointer leaving through a gap the box doesn't cover (e.g. a `margin`).
 
+Content rendered through `ReactDOM.createPortal` (a tooltip or dropdown mounted onto `document.body`, say) is a logical child in React's tree, but not an actual DOM descendant of the tracked element -- so the pointer moving onto it falls through to the geometric check above, same as before this was added.
+
 ## Tests
 
 One day I'll write fancy Cypress tests (probably something [like this](https://stackoverflow.com/questions/55361499/how-to-implement-drag-and-drop-in-cypress-test)), for the moment just know that I've personally, tirelessly and manually stress-tested it using the above sandbox on Chrome, Firefox, Safari and Edge. Do test it in your own project though: mouse events are weird.

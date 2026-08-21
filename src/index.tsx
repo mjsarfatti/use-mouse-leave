@@ -9,9 +9,9 @@ export default function useMouseLeave<T extends HTMLElement = HTMLElement>(): re
   const elementRef = useRef<T | null>(null);
   const [mouseLeft, setMouseLeft] = useState(true);
 
-  // Check whether the pointer is still within our element. A child outside
-  // our box (absolute/fixed/transformed) still counts as "inside", matching
-  // the browser's own mouseenter/leave, even when outside `rect`.
+  // A DOM descendant outside our box (absolute/fixed/transformed) still
+  // counts as "inside", matching native mouseenter/leave. Content rendered
+  // via a portal isn't a DOM descendant, so it falls through to `rect` below.
   const checkBounds = useCallback((event: MouseEvent) => {
     if (!elementRef.current) return;
 
